@@ -1,0 +1,84 @@
+# GitHub Repository Structure
+
+Your defence-news-monitor repository should look like this:
+
+defence-news-monitor/
+├── .github/
+│   └── workflows/
+│       └── daily_digest.yml          # GitHub Actions automation
+│
+├── defence_news_monitor.py           # Main Python script (401 lines)
+├── requirements.txt                  # Python dependencies (feedparser)
+├── defence_news.db                   # SQLite database (auto-created)
+├── README.md                         # Full documentation
+└── .gitignore (optional)             # Exclude database if needed
+
+## File Upload Order
+
+1. Create repository on GitHub
+2. Upload these files FIRST:
+   - defence_news_monitor.py
+   - requirements.txt
+   - .github/workflows/daily_digest.yml
+
+3. Files created automatically:
+   - defence_news.db (after first run)
+
+## GitHub Actions File Location
+
+IMPORTANT: The workflow file MUST be in:
+.github/workflows/daily_digest.yml
+
+The exact path matters! If you upload via web interface:
+1. Click "Add file" → "Create new file"
+2. Name it: .github/workflows/daily_digest.yml
+3. Paste the content
+4. Commit
+
+OR upload as a folder structure with the file inside.
+
+## .gitignore (Optional)
+
+If you don't want to track the database in git:
+
+```
+defence_news.db
+__pycache__/
+*.pyc
+.env
+```
+
+Note: Keeping defence_news.db in repo is fine - it's what makes delta tracking work across runs.
+
+## File Sizes
+
+defence_news_monitor.py     ~13 KB
+requirements.txt            ~20 bytes
+daily_digest.yml            ~1 KB
+defence_news.db             ~10 KB (grows slowly)
+
+Total: ~25 KB (well within GitHub limits)
+
+## Quick Upload Via Web
+
+1. Go to your new repository
+2. Click "uploading an existing file"
+3. Create folder .github/workflows manually
+4. Upload daily_digest.yml into it
+5. Upload other files to root
+6. Commit
+
+OR use git command line:
+
+```bash
+git clone https://github.com/YOUR-USERNAME/defence-news-monitor.git
+cd defence-news-monitor
+mkdir -p .github/workflows
+
+# Copy files into correct locations
+# Then:
+git add .
+git commit -m "Initial setup"
+git push
+```
+
