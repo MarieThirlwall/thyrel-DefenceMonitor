@@ -332,8 +332,8 @@ def send_email_digest(html_content: str, recipient_email: str):
     # Email configuration from environment variables
     smtp_server = os.environ.get('SMTP_SERVER', 'smtp.gmail.com')
     smtp_port = int(os.environ.get('SMTP_PORT', '587'))
-    sender_email = os.environ.get('SENDER_EMAIL')
-    sender_password = os.environ.get('SENDER_PASSWORD')
+    sender_email = os.environ.get('SENDER_EMAIL', '').strip()
+    sender_password = os.environ.get('SENDER_PASSWORD', '').replace(' ', '').replace('\xa0', '').strip()
 
     print(f"\n[EMAIL CONFIG]")
     print(f"  SMTP Server: {smtp_server}")

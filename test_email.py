@@ -20,9 +20,9 @@ def test_email():
     # Get credentials
     smtp_server = os.environ.get('SMTP_SERVER', 'smtp.gmail.com')
     smtp_port = int(os.environ.get('SMTP_PORT', '587'))
-    sender_email = os.environ.get('SENDER_EMAIL')
-    sender_password = os.environ.get('SENDER_PASSWORD')
-    recipient_email = os.environ.get('RECIPIENT_EMAIL')
+    sender_email = os.environ.get('SENDER_EMAIL', '').strip()
+    sender_password = os.environ.get('SENDER_PASSWORD', '').replace(' ', '').replace('\xa0', '').strip()
+    recipient_email = os.environ.get('RECIPIENT_EMAIL', '').strip()
 
     print("\n" + "="*60)
     print("Email Configuration Test")
