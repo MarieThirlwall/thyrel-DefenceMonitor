@@ -328,18 +328,25 @@ def generate_html_digest(articles: List[Dict]) -> str:
 
 def send_email_digest(html_content: str, recipient_email: str):
     """Send email digest via SMTP"""
-    
+
     # Email configuration from environment variables
     smtp_server = os.environ.get('SMTP_SERVER', 'smtp.gmail.com')
     smtp_port = int(os.environ.get('SMTP_PORT', '587'))
     sender_email = os.environ.get('SENDER_EMAIL')
     sender_password = os.environ.get('SENDER_PASSWORD')
-    
+
+    print(f"\n[EMAIL CONFIG]")
+    print(f"  SMTP Server: {smtp_server}")
+    print(f"  SMTP Port: {smtp_port}")
+    print(f"  Sender Email: {sender_email if sender_email else 'NOT SET'}")
+    print(f"  Sender Password: {'SET' if sender_password else 'NOT SET'}")
+    print(f"  Recipient Email: {recipient_email}")
+
     if not sender_email or not sender_password:
         print("ERROR: Email credentials not set. Set SENDER_EMAIL and SENDER_PASSWORD environment variables.")
         print("\nHTML digest preview:")
         print(html_content)
-        return
+        raise ValueError("Email credentials not configured")
     
     # Create message
     msg = MIMEMultipart('alternative')
@@ -353,17 +360,30 @@ def send_email_digest(html_content: str, recipient_email: str):
     
     try:
         # Send email
-        with smtplib.SMTP(smtp_server, smtp_port) as server:
+        print(f"\n[EMAIL SENDING]")
+        print(f"  Connecting to {smtp_server}:{smtp_port}...")
+        with smtplib.SMTP(smtp_server, smtp_port, timeout=30) as server:
+            print(f"  Starting TLS...")
             server.starttls()
+            print(f"  Logging in as {sender_email}...")
             server.login(sender_email, sender_password)
+            print(f"  Sending message...")
             server.send_message(msg)
-        
-        print(f"\n✓ Email digest sent to {recipient_email}")
-        
+
+        print(f"\n✓ Email digest sent successfully to {recipient_email}")
+
+    except smtplib.SMTPAuthenticationError as e:
+        print(f"\n✗ SMTP Authentication Error: {e}")
+        print("  Check that your Gmail App Password is correct (16 characters)")
+        print("  Verify 2-Step Verification is enabled in Google Account")
+        raise
+    except smtplib.SMTPException as e:
+        print(f"\n✗ SMTP Error: {e}")
+        print(f"  Server: {smtp_server}:{smtp_port}")
+        raise
     except Exception as e:
-        print(f"\n✗ Error sending email: {e}")
-        print("\nHTML digest preview:")
-        print(html_content)
+        print(f"\n✗ Unexpected error sending email: {type(e).__name__}: {e}")
+        raise
 
 def main():
     """Main execution function"""
@@ -387,14 +407,24 @@ def main():
     
     # Generate and send digest
     html_digest = generate_html_digest(all_articles)
-    
+
     recipient = os.environ.get('RECIPIENT_EMAIL', 'your-email@example.com')
+    print(f"\n[RECIPIENT] {recipient}")
+
     send_email_digest(html_digest, recipient)
-    
-    # Save HTML digest to file for review
-    with open('/mnt/user-data/outputs/latest_digest.html', 'w', encoding='utf-8') as f:
-        f.write(html_digest)
-    print("✓ Digest saved to latest_digest.html")
+
+    # Save HTML digest to file for review (optional, may fail in some environments)
+    try:
+        digest_path = 'latest_digest.html'
+        with open(digest_path, 'w', encoding='utf-8') as f:
+            f.write(html_digest)
+        print(f"✓ Digest saved to {digest_path}")
+    except Exception as e:
+        print(f"Note: Could not save digest file ({e})")
+
+    print(f"\n{'='*60}")
+    print("✓ Defence News Monitor completed successfully")
+    print(f"{'='*60}\n")
 
 if __name__ == "__main__":
     main()
