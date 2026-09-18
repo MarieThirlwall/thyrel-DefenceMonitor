@@ -31,6 +31,33 @@ RSS_FEEDS = {
     "US DoD": "https://www.defense.gov/DesktopModules/ArticleCS/RSS.ashx?ContentType=1&Site=945",
     "US DoD Contracts": "https://www.defense.gov/DesktopModules/ArticleCS/RSS.ashx?ContentType=1&Site=3",
     "NATO": "https://www.nato.int/cps/en/natohq/news.rss",
+
+    # === Quantum & Cryptography Trade Press ===
+    "The Quantum Insider": "https://thequantuminsider.com/feed/",
+    "NIST News": "https://www.nist.gov/news-events/news/rss.xml",
+
+    # === Cybersecurity Trade Press ===
+    "Infosecurity Magazine": "https://www.infosecurity-magazine.com/rss/news/",
+    "Dark Reading": "https://www.darkreading.com/rss.xml",
+    "Help Net Security": "https://www.helpnetsecurity.com/feed/",
+    "The Hacker News": "https://feeds.feedburner.com/TheHackersNews",
+
+    # === Competitor Watch (Google News aggregation) ===
+    # Feature launches, funding, partnerships & market news for PQC/crypto-agility
+    # competitors. Two feeds keep each Google News query short enough to be reliable.
+    "Competitor Watch: PQC Specialists": (
+        "https://news.google.com/rss/search?q=%22PQShield%22+OR+%22ISARA%22+OR+"
+        "%22ID+Quantique%22+OR+%22Quantinuum%22+OR+%22SandboxAQ%22+OR+%22Quantropi%22+OR+"
+        "%22evolutionQ%22+OR+%22Crypto4A%22+OR+%22QuSecure%22+OR+%22Xiphera%22"
+        "&hl=en-US&gl=US&ceid=US:en"
+    ),
+    "Competitor Watch: Key Mgmt & Crypto-Agility": (
+        "https://news.google.com/rss/search?q=%22Keyfactor%22+OR+%22Venafi%22+OR+"
+        "%22Utimaco%22+OR+%22Entrust%22+OR+%22DigiCert%22+OR+%22CryptoNext%22+OR+"
+        "%22Qrypt%22+OR+%22Quantum+Xchange%22+OR+%22American+Binary%22+OR+"
+        "%22InfoSec+Global%22"
+        "&hl=en-US&gl=US&ceid=US:en"
+    ),
 }
 
 # Keyword filters (case-insensitive matching)
@@ -117,6 +144,77 @@ KEYWORDS = [
     "Ukraine", "Indo-Pacific", "China", "Russia", "semiconductors",
 ]
 
+# === Post-Quantum Cryptography & Crypto-Agility (Arqit market) ===
+# Kept as its own list (rather than folded only into KEYWORDS) so general
+# cybersecurity trade press can be filtered on this narrower, on-topic set
+# instead of the broad defence-prime KEYWORDS list (see FEED_KEYWORDS below) -
+# otherwise generic terms like "AI"/"Cyber"/"Data" swamp the digest with
+# unrelated breach/malware news from those feeds.
+PQC_KEYWORDS = [
+    "software-defined encryption", "software defined encryption",
+    "post quantum cryptography", "post-quantum cryptography", "PQC",
+    "post quantum cryptography migration", "post-quantum migration",
+    "PQC migration", "quantum-safe migration", "quantum readiness",
+    "crypto-agility", "cryptographic agility", "crypto agility",
+    "key management", "key management system", "KMS",
+    "key lifecycle management", "key orchestration", "key distribution",
+    "crypto-posture management", "cryptographic posture management",
+    "crypto posture management", "cryptographic inventory",
+    "crypto asset inventory", "cryptographic discovery", "CBOM",
+    "crypto bill of materials",
+    "quantum-safe", "quantum safe", "quantum-resistant", "quantum resistant",
+    "quantum-secure", "quantum threat", "harvest now decrypt later",
+    "harvest-now-decrypt-later", "HNDL", "Q-Day", "Y2Q",
+    "NIST PQC", "NIST post-quantum", "CRYSTALS-Kyber", "Kyber",
+    "CRYSTALS-Dilithium", "Dilithium", "ML-KEM", "ML-DSA", "SLH-DSA",
+    "FIPS 203", "FIPS 204", "FIPS 205", "lattice-based cryptography",
+    "quantum key distribution", "QKD", "quantum random number generator",
+    "QRNG", "hybrid cryptography", "hybrid PQC", "zero trust encryption",
+    "symmetric key agreement", "CNSA 2.0", "hardware security module",
+    "HSM", "PKI modernisation", "PKI modernization",
+    "certificate lifecycle management",
+]
+
+# Competitor organisation names used to flag articles for the
+# "Competitor Watch" digest section
+COMPETITORS = [
+    "PQShield", "Post-Quantum", "ISARA", "ID Quantique", "Quantinuum",
+    "SandboxAQ", "Quantropi", "evolutionQ", "Crypto4A", "QuSecure",
+    "Keyfactor", "Venafi", "Utimaco", "Entrust", "DigiCert", "CryptoNext",
+    "Qrypt", "Xiphera", "Quantum Xchange", "American Binary",
+    "InfoSec Global", "IBM Quantum Safe", "Fortanix", "NXP Semiconductor",
+    "IDEMIA",
+]
+COMPETITOR_SET = {c.lower() for c in COMPETITORS}
+
+# Full keyword set for defence-prime feeds: broad market coverage plus PQC
+# terms and competitor names
+KEYWORDS = KEYWORDS + PQC_KEYWORDS + COMPETITORS
+
+# Narrow keyword set for general cybersecurity trade press feeds, which cover
+# all of infosec (breaches, malware, etc.) - only PQC/crypto-agility/
+# competitor content is relevant there
+PQC_AND_COMPETITOR_KEYWORDS = PQC_KEYWORDS + COMPETITORS
+
+# Per-feed keyword override. Feeds not listed here use the full KEYWORDS list.
+FEED_KEYWORDS = {
+    "Infosecurity Magazine": PQC_AND_COMPETITOR_KEYWORDS,
+    "Dark Reading": PQC_AND_COMPETITOR_KEYWORDS,
+    "Help Net Security": PQC_AND_COMPETITOR_KEYWORDS,
+    "The Hacker News": PQC_AND_COMPETITOR_KEYWORDS,
+}
+
+# Terms that suggest a competitor article is about a new feature, product,
+# or market move rather than general background coverage
+LAUNCH_SIGNAL_KEYWORDS = [
+    "launches", "launch", "unveils", "unveil", "announces", "announcement",
+    "release", "releases", "rolls out", "roll-out", "partners with",
+    "partnership", "collaborates", "collaboration", "raises", "funding round",
+    "series a", "series b", "series c", "acquires", "acquisition",
+    "acquired", "patent", "certification", "certified", "wins contract",
+    "selected by", "named", "achieves", "milestone", "expands", "expansion",
+]
+
 # Database setup
 DB_PATH = "defence_news.db"
 
@@ -174,30 +272,39 @@ def matches_keywords(text: str, keywords: List[str]) -> List[str]:
             matched.append(keyword)
     return matched
 
-def fetch_feed(source_name: str, feed_url: str) -> List[Dict]:
+def fetch_feed(source_name: str, feed_url: str, keywords: List[str] = None) -> List[Dict]:
     """Fetch and parse RSS feed"""
+    if keywords is None:
+        keywords = KEYWORDS
     try:
         print(f"Fetching {source_name}...")
         feed = feedparser.parse(feed_url)
-        
+
         articles = []
         for entry in feed.entries:
             title = entry.get('title', 'No title')
             link = entry.get('link', '')
             summary = entry.get('summary', entry.get('description', ''))
             published = entry.get('published', entry.get('updated', ''))
-            
+
             # Combine title and summary for keyword matching
             search_text = f"{title} {summary}"
-            
+
             # Check if matches any keywords
-            matched_keywords = matches_keywords(search_text, KEYWORDS)
+            matched_keywords = matches_keywords(search_text, keywords)
             
             if matched_keywords:
                 article_id = get_article_hash(title, link)
-                
+
                 # Only include if not seen before (delta)
                 if not is_article_seen(article_id):
+                    matched_competitors = [
+                        k for k in matched_keywords if k.lower() in COMPETITOR_SET
+                    ]
+                    is_launch_signal = bool(
+                        matches_keywords(search_text, LAUNCH_SIGNAL_KEYWORDS)
+                    )
+
                     articles.append({
                         'id': article_id,
                         'source': source_name,
@@ -205,7 +312,10 @@ def fetch_feed(source_name: str, feed_url: str) -> List[Dict]:
                         'link': link,
                         'summary': summary[:300],  # Truncate long summaries
                         'published': published,
-                        'matched_keywords': matched_keywords
+                        'matched_keywords': matched_keywords,
+                        'matched_competitors': matched_competitors,
+                        'is_competitor_news': bool(matched_competitors),
+                        'is_launch_signal': is_launch_signal,
                     })
                     
                     # Mark as seen
@@ -233,6 +343,10 @@ def generate_html_digest(articles: List[Dict]) -> str:
         """.format(date=datetime.now().strftime("%d %B %Y"))
         return html
     
+    # Competitor Watch: articles mentioning a tracked PQC/crypto-agility competitor
+    competitor_articles = [a for a in articles if a.get('is_competitor_news')]
+    competitor_articles.sort(key=lambda a: not a.get('is_launch_signal'))
+
     # Group by source
     by_source = {}
     for article in articles:
@@ -284,6 +398,32 @@ def generate_html_digest(articles: List[Dict]) -> str:
                 border-radius: 5px;
                 margin-bottom: 20px;
             }}
+            .competitor-section {{
+                background-color: #fdf6ec;
+                border: 1px solid #f0c674;
+                border-radius: 5px;
+                padding: 15px 15px 5px 15px;
+                margin-bottom: 25px;
+            }}
+            .competitor-article {{
+                border-left: 4px solid #e67e22;
+            }}
+            .badge {{
+                display: inline-block;
+                font-size: 11px;
+                font-weight: bold;
+                padding: 2px 8px;
+                border-radius: 10px;
+                margin-right: 6px;
+            }}
+            .badge-launch {{
+                background-color: #e67e22;
+                color: #ffffff;
+            }}
+            .badge-market {{
+                background-color: #95a5a6;
+                color: #ffffff;
+            }}
         </style>
     </head>
     <body>
@@ -298,7 +438,34 @@ def generate_html_digest(articles: List[Dict]) -> str:
         count=len(articles),
         sources=len(by_source)
     )
-    
+
+    # Competitor Watch section: feature launches & market news from tracked
+    # PQC / crypto-agility / key management competitors
+    if competitor_articles:
+        html += f"""
+        <div class="competitor-section">
+            <h3 style="margin-top: 0;">🏁 Competitor Watch ({len(competitor_articles)})</h3>
+        """
+        for article in competitor_articles:
+            badge = (
+                '<span class="badge badge-launch">🚀 FEATURE LAUNCH</span>'
+                if article['is_launch_signal']
+                else '<span class="badge badge-market">📰 MARKET NEWS</span>'
+            )
+            competitors_str = ", ".join(article['matched_competitors'])
+            html += f"""
+        <div class="article competitor-article">
+            {badge}
+            <div class="article-title">
+                <a href="{article['link']}" target="_blank">{article['title']}</a>
+            </div>
+            <div class="article-meta">{article['source']} &middot; {article['published']}</div>
+            <div class="article-summary">{article['summary']}</div>
+            <div class="keywords">Competitor: {competitors_str}</div>
+        </div>
+            """
+        html += "\n        </div>"
+
     # Add articles grouped by source
     for source in sorted(by_source.keys()):
         html += f"\n        <h3>{source} ({len(by_source[source])})</h3>"
@@ -397,7 +564,8 @@ def main():
     # Fetch all feeds
     all_articles = []
     for source_name, feed_url in RSS_FEEDS.items():
-        articles = fetch_feed(source_name, feed_url)
+        feed_keywords = FEED_KEYWORDS.get(source_name, KEYWORDS)
+        articles = fetch_feed(source_name, feed_url, feed_keywords)
         all_articles.extend(articles)
         time.sleep(1)  # Be polite to servers
     

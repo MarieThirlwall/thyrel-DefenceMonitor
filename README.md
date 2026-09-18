@@ -1,19 +1,20 @@
 # Defence & Security News Monitor
 
-Automated RSS aggregator for defence and security market intelligence. Monitors 13+ news sources, filters by 120+ keywords (ISR, CACI, procurement, AI, cyber, etc.), tracks deltas (only new articles), and sends daily email digests.
+Automated RSS aggregator for defence and security market intelligence. Monitors 21 news sources, filters by 200+ keywords (ISR, CACI, procurement, AI, cyber, post-quantum cryptography, crypto-agility, etc.), tracks deltas (only new articles), flags competitor feature launches, and sends daily email digests.
 
 ## 🎯 What This Does
 
-- ✅ Monitors Defense News, Breaking Defense, C4ISRNET, War Zone, RUSI, IISS, Gov.uk, US DoD, NATO
-- 🔍 Filters for CACI-specific news, procurement, emerging tech, geopolitical signals
+- ✅ Monitors Defense News, Breaking Defense, C4ISRNET, War Zone, RUSI, IISS, Gov.uk, US DoD, NATO, plus quantum/PQC and cybersecurity trade press
+- 🔍 Filters for CACI-specific news, procurement, emerging tech, geopolitical signals, post-quantum cryptography & crypto-agility market intelligence
+- 🏁 **Competitor Watch** section flags feature launches, funding, partnerships and market news from tracked PQC/crypto-agility/key management competitors
 - 📧 Daily email digest at 06:00 UTC
 - 💾 SQLite database tracks what you've seen (delta only)
 - 🤖 Runs automatically on GitHub Actions (100% free)
 - 🎨 Professional HTML email with matched keywords highlighted
 
-## 📋 Monitored Sources (13 feeds)
+## 📋 Monitored Sources (21 feeds)
 
-**Publications:**
+**Defence Publications:**
 - Defense News, Breaking Defense, C4ISRNET, The War Zone
 - RUSI, IISS
 
@@ -22,7 +23,17 @@ Automated RSS aggregator for defence and security market intelligence. Monitors 
 - US Department of Defense (News + Contracts feed)
 - NATO
 
-## 🔍 Keyword Coverage (120+ terms)
+**Quantum & Cryptography Trade Press:**
+- The Quantum Insider, NIST News
+
+**Cybersecurity Trade Press:**
+- Infosecurity Magazine, Dark Reading, Help Net Security, The Hacker News
+
+**Competitor Watch (Google News aggregation):**
+- PQC Specialists: PQShield, ISARA, ID Quantique, Quantinuum, SandboxAQ, Quantropi, evolutionQ, Crypto4A, QuSecure, Xiphera
+- Key Mgmt & Crypto-Agility: Keyfactor, Venafi, Utimaco, Entrust, DigiCert, CryptoNext, Qrypt, Quantum Xchange, American Binary, InfoSec Global
+
+## 🔍 Keyword Coverage (200+ terms)
 
 **CACI Specific:**
 - CACI contracts, wins, frameworks, acquisitions, partnerships
@@ -32,6 +43,12 @@ Automated RSS aggregator for defence and security market intelligence. Monitors 
 - Data platforms, analytics, fusion, integration
 - Digital twins, quantum, edge computing
 
+**Post-Quantum Cryptography & Crypto-Agility (Arqit market):**
+- Software-defined encryption, post-quantum cryptography, PQC migration, quantum-safe/quantum-resistant, harvest-now-decrypt-later
+- Crypto-agility, key management, crypto-posture management, cryptographic inventory/discovery, CBOM
+- NIST PQC standards: CRYSTALS-Kyber, CRYSTALS-Dilithium, ML-KEM, ML-DSA, SLH-DSA, FIPS 203/204/205
+- Quantum key distribution (QKD), quantum random number generators (QRNG), hybrid cryptography, HSM, PKI modernisation
+
 **Procurement:**
 - Framework awards, G-Cloud, DSP, MOD D2N2
 - Contract awards, tenders, procurement reform
@@ -40,6 +57,7 @@ Automated RSS aggregator for defence and security market intelligence. Monitors 
 - Primes: BAE Systems, QinetiQ, Leonardo, Thales, Raytheon, Babcock
 - Tech: Palantir, Anduril, CGI, Leidos, Serco
 - Cloud: AWS Defence, Microsoft Defence, Google Cloud
+- PQC/Crypto-Agility/Key Mgmt competitors: PQShield, Post-Quantum, ISARA, ID Quantique, Quantinuum, SandboxAQ, Quantropi, evolutionQ, Crypto4A, QuSecure, Keyfactor, Venafi, Utimaco, Entrust, DigiCert, CryptoNext, Qrypt, Xiphera, Quantum Xchange, American Binary, InfoSec Global, IBM Quantum Safe, Fortanix, NXP Semiconductor, IDEMIA
 
 **Strategy & Policy:**
 - MoD/NATO data strategies, AI regulation, AUKUS
@@ -49,6 +67,12 @@ Automated RSS aggregator for defence and security market intelligence. Monitors 
 - Ukraine, China, Russia, Indo-Pacific, semiconductors
 
 [Full keyword list in script]
+
+## 🏁 Competitor Watch
+
+Any article that matches a tracked competitor name is pulled into a dedicated **Competitor Watch** section at the top of the digest, ahead of the normal per-source listing (it still also appears under its source). Articles containing launch-signal language (`launches`, `unveils`, `partnership`, `raises funding`, `acquisition`, `certification`, etc.) are tagged **🚀 FEATURE LAUNCH**; everything else is tagged **📰 MARKET NEWS**. Launch-signal articles are sorted to the top of the section so product moves stand out immediately.
+
+To track additional competitors, add their name to both `KEYWORDS` and `COMPETITORS` in `defence_news_monitor.py` (~line 181), and optionally add them to one of the `Competitor Watch:` Google News queries in `RSS_FEEDS` for dedicated aggregation.
 
 ---
 
