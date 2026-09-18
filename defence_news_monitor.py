@@ -7,6 +7,7 @@ Monitors multiple RSS feeds, filters by keywords, tracks deltas, sends email dig
 import feedparser
 import sqlite3
 import hashlib
+import html
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -261,6 +262,18 @@ def mark_article_seen(article_id: str, source: str, title: str, link: str,
     conn.commit()
     conn.close()
 
+def clean_text(raw: str) -> str:
+    """Strip embedded HTML markup and decode entities from feed text.
+
+    Some feeds (notably Google News RSS) embed raw <a>/<font> tags inside
+    the summary field. Left unescaped, that markup corrupts the digest's
+    own HTML when inserted into it, so every feed's text is normalised to
+    plain text before matching or display.
+    """
+    text = re.sub(r'<[^>]+>', ' ', raw or '')
+    text = html.unescape(text)
+    return re.sub(r'\s+', ' ', text).strip()
+
 def matches_keywords(text: str, keywords: List[str]) -> List[str]:
     """Check if text contains any keywords (case-insensitive), return matched keywords"""
     text_lower = text.lower()
@@ -282,9 +295,9 @@ def fetch_feed(source_name: str, feed_url: str, keywords: List[str] = None) -> L
 
         articles = []
         for entry in feed.entries:
-            title = entry.get('title', 'No title')
+            title = clean_text(entry.get('title', 'No title'))
             link = entry.get('link', '')
-            summary = entry.get('summary', entry.get('description', ''))
+            summary = clean_text(entry.get('summary', entry.get('description', '')))
             published = entry.get('published', entry.get('updated', ''))
 
             # Combine title and summary for keyword matching
@@ -330,9 +343,9 @@ def fetch_feed(source_name: str, feed_url: str, keywords: List[str] = None) -> L
 
 def generate_html_digest(articles: List[Dict]) -> str:
     """Generate HTML email digest"""
-    
+
     if not articles:
-        html = """
+        html_out = """
         <html>
         <body>
             <h2>Defence & Security Intelligence Digest</h2>
@@ -341,21 +354,26 @@ def generate_html_digest(articles: List[Dict]) -> str:
         </body>
         </html>
         """.format(date=datetime.now().strftime("%d %B %Y"))
-        return html
-    
-    # Competitor Watch: articles mentioning a tracked PQC/crypto-agility competitor
+        return html_out
+
+    # Competitor Watch: articles mentioning a tracked PQC/crypto-agility
+    # competitor. These are excluded from the per-source grouping below so
+    # each article is shown once, not twice.
     competitor_articles = [a for a in articles if a.get('is_competitor_news')]
     competitor_articles.sort(key=lambda a: not a.get('is_launch_signal'))
+    total_sources = len({a['source'] for a in articles})
 
-    # Group by source
+    # Group remaining (non-competitor) articles by source
     by_source = {}
     for article in articles:
+        if article.get('is_competitor_news'):
+            continue
         source = article['source']
         if source not in by_source:
             by_source[source] = []
         by_source[source].append(article)
     
-    html = """
+    html_out = """
     <html>
     <head>
         <style>
@@ -436,13 +454,13 @@ def generate_html_digest(articles: List[Dict]) -> str:
     """.format(
         date=datetime.now().strftime("%d %B %Y"),
         count=len(articles),
-        sources=len(by_source)
+        sources=total_sources
     )
 
     # Competitor Watch section: feature launches & market news from tracked
     # PQC / crypto-agility / key management competitors
     if competitor_articles:
-        html += f"""
+        html_out += f"""
         <div class="competitor-section">
             <h3 style="margin-top: 0;">🏁 Competitor Watch ({len(competitor_articles)})</h3>
         """
@@ -452,46 +470,47 @@ def generate_html_digest(articles: List[Dict]) -> str:
                 if article['is_launch_signal']
                 else '<span class="badge badge-market">📰 MARKET NEWS</span>'
             )
-            competitors_str = ", ".join(article['matched_competitors'])
-            html += f"""
+            competitors_str = html.escape(", ".join(article['matched_competitors']))
+            html_out += f"""
         <div class="article competitor-article">
             {badge}
             <div class="article-title">
-                <a href="{article['link']}" target="_blank">{article['title']}</a>
+                <a href="{html.escape(article['link'], quote=True)}" target="_blank">{html.escape(article['title'])}</a>
             </div>
-            <div class="article-meta">{article['source']} &middot; {article['published']}</div>
-            <div class="article-summary">{article['summary']}</div>
+            <div class="article-meta">{html.escape(article['source'])} &middot; {html.escape(article['published'])}</div>
+            <div class="article-summary">{html.escape(article['summary'])}</div>
             <div class="keywords">Competitor: {competitors_str}</div>
         </div>
             """
-        html += "\n        </div>"
+        html_out += "\n        </div>"
 
-    # Add articles grouped by source
+    # Add remaining articles grouped by source
     for source in sorted(by_source.keys()):
-        html += f"\n        <h3>{source} ({len(by_source[source])})</h3>"
-        
+        html_out += f"\n        <h3>{html.escape(source)} ({len(by_source[source])})</h3>"
+
         for article in by_source[source]:
             keywords_str = ", ".join(article['matched_keywords'][:5])  # Show first 5 matches
             if len(article['matched_keywords']) > 5:
                 keywords_str += f" +{len(article['matched_keywords']) - 5} more"
-            
-            html += f"""
+            keywords_str = html.escape(keywords_str)
+
+            html_out += f"""
         <div class="article">
             <div class="article-title">
-                <a href="{article['link']}" target="_blank">{article['title']}</a>
+                <a href="{html.escape(article['link'], quote=True)}" target="_blank">{html.escape(article['title'])}</a>
             </div>
-            <div class="article-meta">{article['published']}</div>
-            <div class="article-summary">{article['summary']}</div>
+            <div class="article-meta">{html.escape(article['published'])}</div>
+            <div class="article-summary">{html.escape(article['summary'])}</div>
             <div class="keywords">Matched: {keywords_str}</div>
         </div>
             """
-    
-    html += """
+
+    html_out += """
     </body>
     </html>
     """
-    
-    return html
+
+    return html_out
 
 def send_email_digest(html_content: str, recipient_email: str):
     """Send email digest via SMTP"""
